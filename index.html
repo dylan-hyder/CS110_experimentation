@@ -3,236 +3,424 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CS110 Code Structure Visualizer</title>
+    <title>Python Flowchart Debugger for Students</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --panel-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #38bdf8;
-            --border: #334155;
-            
-            /* Scope Colors */
-            --color-func: #ec4899;
-            --color-loop: #eab308;
-            --color-cond: #22c55e;
-            --color-line: #64748b;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        header {
-            background-color: var(--panel-bg);
-            padding: 1rem 2rem;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        h1 { font-size: 1.25rem; font-weight: 600; color: var(--accent); }
-        .subtitle { font-size: 0.85rem; color: var(--text-muted); }
-
-        .dashboard {
-            flex: 1;
-            display: flex;
-            padding: 1.5rem;
-            gap: 1.5rem;
-            overflow: hidden;
-        }
-
-        .panel {
-            flex: 1;
-            background-color: var(--panel-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .panel-header {
-            background-color: rgba(0,0,0,0.2);
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid var(--border);
-            font-weight: 500;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
-
-        textarea {
-            flex: 1;
-            background-color: transparent;
-            border: none;
-            color: #e2e8f0;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 1rem;
-            padding: 1rem;
-            resize: none;
-            outline: none;
-            line-height: 1.5;
-        }
-
-        .visualizer-output {
-            flex: 1;
-            padding: 1rem;
-            overflow-y: auto;
-            font-family: monospace;
-        }
-
-        /* Visual Structure Blocks */
-        .scope-block {
-            margin: 4px 0;
-            padding: 8px 12px;
-            border-left: 4px solid var(--border);
-            border-radius: 0 4px 4px 0;
-            background-color: rgba(255,255,255,0.02);
-        }
-        
-        .scope-title {
-            font-weight: bold;
-            font-size: 0.9rem;
-            margin-bottom: 4px;
-        }
-
-        .scope-line {
-            padding-left: 8px;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            opacity: 0.8;
-            white-space: pre-wrap;
-        }
-
-        /* Specific Block Themes */
-        .block-function { border-left-color: var(--color-func); background-color: rgba(236, 72, 153, 0.05); }
-        .block-function > .scope-title { color: var(--color-func); }
-
-        .block-loop { border-left-color: var(--color-loop); background-color: rgba(234, 179, 8, 0.05); }
-        .block-loop > .scope-title { color: var(--color-loop); }
-
-        .block-conditional { border-left-color: var(--color-cond); background-color: rgba(34, 197, 94, 0.05); }
-        .block-conditional > .scope-title { color: var(--color-cond); }
-
-        .placeholder {
-            color: var(--text-muted);
-            font-style: italic;
-            text-align: center;
-            margin-top: 2rem;
+        /* Smooth transitions for highlighted flowchart nodes */
+        .node rect, .node polygon, .node circle {
+            transition: all 0.3s ease;
         }
     </style>
 </head>
-<body>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
 
-    <header>
-        <div>
-            <h1>CS110 Code Structure Visualizer</h1>
-            <p class="subtitle">Paste your code to see how the computer groups your logic</p>
+    <header class="bg-slate-800 border-b border-slate-700 p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold text-emerald-400 flex items-center gap-2">
+                <span>🐍</span> Python Code Flowchart Visualizer & Debugger
+            </h1>
+            <div class="flex items-center gap-3">
+                <label class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg cursor-pointer text-sm font-medium transition-colors border border-slate-600">
+                    📁 Upload .py File
+                    <input type="file" id="fileInput" accept=".py" class="hidden">
+                </label>
+            </div>
         </div>
     </header>
 
-    <div class="dashboard">
-        <div class="panel">
-            <div class="panel-header">Paste Code Snippet Here</div>
-            <textarea id="codeInput" placeholder="# Example:
-def check_numbers(lines):
-    for num in lines:
-        if num > 10:
-            print('Large number!')
-        else:
-            print('Small number')"></textarea>
-        </div>
+    <main class="flex-1 container mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
+        
+        <div class="lg:col-span-5 flex flex-col gap-4">
+            <div class="bg-slate-800 rounded-xl p-4 shadow-lg border border-slate-700 flex flex-col flex-1">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-semibold text-slate-400">Python Source Code</span>
+                    <button id="buildBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded transition-colors">
+                        🔄 Generate Flowchart
+                    </button>
+                </div>
+                <textarea id="codeEditor" class="w-full flex-1 p-3 bg-slate-950 text-emerald-300 font-mono text-sm rounded-lg border border-slate-700 focus:outline-none focus:border-emerald-500 resize-none min-h-[300px]" spellcheck="false"># Sample code for students to test
+x = 1
+y = 5
+while x < 4:
+    x = x + 1
+    y = y * 2
+if y > 20:
+    status = "High"
+else:
+    status = "Low"</textarea>
+            </div>
 
-        <div class="panel">
-            <div class="panel-header">Visual Structural Map</div>
-            <div class="visualizer-output" id="visualizerOutput">
-                <div class="placeholder">Waiting for code input...</div>
+            <div class="bg-slate-800 rounded-xl p-4 shadow-lg border border-slate-700">
+                <h3 class="text-sm font-semibold text-slate-400 mb-3">Debugger Controls</h3>
+                <div class="flex gap-2 mb-4">
+                    <button id="startDebugBtn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 rounded transition-colors disabled:opacity-50">
+                        🚀 Start Debugging
+                    </button>
+                    <button id="stepBtn" disabled class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-medium py-2 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                        👣 Step Forward
+                    </button>
+                    <button id="stopDebugBtn" disabled class="bg-rose-600 hover:bg-rose-500 text-white font-medium px-4 py-2 rounded transition-colors disabled:opacity-30">
+                        ⏹️ Reset
+                    </button>
+                </div>
+                
+                <div class="bg-slate-950 rounded-lg p-3 border border-slate-700">
+                    <span class="text-xs font-bold text-slate-400 tracking-wider block mb-2 uppercase">Variable Watch Window</span>
+                    <div id="variableWatch" class="font-mono text-sm text-amber-400 space-y-1">
+                        <span class="text-slate-500 italic text-xs">No active execution trace. Click "Start Debugging".</span>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+
+        <div class="lg:col-span-7 bg-slate-800 rounded-xl p-4 shadow-lg border border-slate-700 flex flex-col">
+            <span class="text-sm font-semibold text-slate-400 mb-2">Visual Execution Flowchart</span>
+            <div class="flex-1 bg-white rounded-lg p-4 overflow-auto flex items-center justify-center min-h-[400px]">
+                <div id="flowchartCanvas" class="mermaid w-full text-center">
+                    %% Flowchart will render here %%
+                </div>
+            </div>
+        </div>
+
+    </main>
 
     <script>
-        const codeInput = document.getElementById('codeInput');
-        const visualizerOutput = document.getElementById('visualizerOutput');
+        // Initialize Mermaid
+        mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' });
 
-        codeInput.addEventListener('input', () => {
-            const code = codeInput.value;
-            if (!code.trim()) {
-                visualizerOutput.innerHTML = '<div class="placeholder">Waiting for code input...</div>';
-                return;
-            }
-            renderStructure(code);
+        // State Machine Objects
+        let parsedLines = [];
+        let currentStepIndex = -1;
+        let variables = {};
+        let executionPointer = 0;
+        let controlStack = []; // For handling code block loops/conditions tracking
+
+        // DOM Cache elements
+        const codeEditor = document.getElementById('codeEditor');
+        const fileInput = document.getElementById('fileInput');
+        const buildBtn = document.getElementById('buildBtn');
+        const startDebugBtn = document.getElementById('startDebugBtn');
+        const stepBtn = document.getElementById('stepBtn');
+        const stopDebugBtn = document.getElementById('stopDebugBtn');
+        const variableWatch = document.getElementById('variableWatch');
+        const flowchartCanvas = document.getElementById('flowchartCanvas');
+
+        // File Uploader Handler
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                codeEditor.value = evt.target.result;
+                resetDebugger();
+                generateVisualFlowchart();
+            };
+            reader.readAsText(file);
         });
 
-        function renderStructure(code) {
-            const lines = code.split('\n');
-            visualizerOutput.innerHTML = '';
+        buildBtn.addEventListener('click', () => {
+            resetDebugger();
+            generateVisualFlowchart();
+        });
+
+        startDebugBtn.addEventListener('click', startDebugging);
+        stepBtn.addEventListener('click', executeNextStep);
+        stopDebugBtn.addEventListener('click', resetDebugger);
+
+        // Core Parsing Logic: Translates subset of Python code into structural nodes
+        function parseCodeStructure() {
+            const lines = codeEditor.value.split('\n');
+            parsedLines = [];
             
-            // Root container to append structural HTML elements
-            let currentContainer = visualizerOutput;
-            // Track active stack of containers and their indentation levels
-            const stack = [{ indent: -1, element: visualizerOutput }];
+            lines.forEach((line, index) => {
+                const trimmed = line.trim();
+                if (trimmed === "" || trimmed.startsWith('#')) return; // ignore whitespace/comments
 
-            lines.forEach((line) => {
-                // Skip completely empty lines
-                if (!line.trim()) return;
-
-                // Calculate indentation level (count spaces)
+                // Determine base line indentation levels
                 const indent = line.search(/\S/);
-                const trimmedLine = line.trim();
-
-                // Determine block type based on intro keywords
-                let blockType = null;
-                let blockLabel = '';
-
-                if (trimmedLine.startsWith('def ') || trimmedLine.startsWith('function ')) {
-                    blockType = 'block-function';
-                    blockLabel = '⚙️ Function Scope';
-                } else if (trimmedLine.startsWith('for ') || trimmedLine.startsWith('while ')) {
-                    blockType = 'block-loop';
-                    blockLabel = '🔄 Loop Block';
-                } else if (trimmedLine.startsWith('if ') || trimmedLine.startsWith('elif ') || trimmedLine.startsWith('else:') || trimmedLine.startsWith('else ')) {
-                    blockType = 'block-conditional';
-                    blockLabel = '🌿 Conditional Branch';
+                
+                let type = 'statement';
+                let condition = '';
+                
+                if (trimmed.startsWith('while ')) {
+                    type = 'while';
+                    condition = trimmed.replace('while', '').replace(':', '').trim();
+                } else if (trimmed.startsWith('if ')) {
+                    type = 'if';
+                    condition = trimmed.replace('if', '').replace(':', '').trim();
+                } else if (trimmed.startsWith('else:')) {
+                    type = 'else';
                 }
 
-                // Manage scope stack using indentation level
-                while (stack.length > 1 && indent <= stack[stack.length - 1].indent) {
-                    stack.pop();
-                }
-                currentContainer = stack[stack.length - 1].element;
-
-                if (blockType) {
-                    // Create a structural nesting container
-                    const blockDiv = document.createElement('div');
-                    blockDiv.className = `scope-block ${blockType}`;
-                    
-                    const titleDiv = document.createElement('div');
-                    titleDiv.className = 'scope-title';
-                    titleDiv.textContent = `${blockLabel}: ${trimmedLine}`;
-                    blockDiv.appendChild(titleDiv);
-
-                    currentContainer.appendChild(blockDiv);
-                    
-                    // Push this new block onto the stack so its children nest inside it
-                    stack.push({ indent: indent, element: blockDiv });
-                } else {
-                    // Standard execution line inside the current active scope
-                    const lineDiv = document.createElement('div');
-                    lineDiv.className = 'scope-line';
-                    lineDiv.textContent = trimmedLine;
-                    currentContainer.appendChild(lineDiv);
-                }
+                parsedLines.push({
+                    id: `Line${parsedLines.length}`,
+                    originalIndex: index,
+                    text: trimmed,
+                    indent: indent,
+                    type: type,
+                    condition: condition
+                });
             });
+            return parsedLines;
         }
+
+        // Generates Mermaid Markup based on parsed lines and appends dynamic active styles
+        async function generateVisualFlowchart(activeNodeId = null) {
+            const nodes = parseCodeStructure();
+            if (nodes.length === 0) {
+                flowchartCanvas.innerHTML = "<span class='text-slate-400 italic'>Please type or upload some valid Python code.</span>";
+                return;
+            }
+
+            let diagramText = "graph TD\n";
+            diagramText += "Start([▶ Start Code Execution]) --> Line0\n";
+
+            // Draw structural block flows sequentially
+            for (let i = 0; i < nodes.length; i++) {
+                const node = nodes[i];
+                const nextNode = nodes[i + 1];
+
+                // Node Shapes mapped based on evaluation typing rules
+                if (node.type === 'if' || node.type === 'while') {
+                    diagramText += `  ${node.id}{"${node.text}"}\n`;
+                } else {
+                    diagramText += `  ${node.id}["${node.text}"]\n`;
+                }
+
+                // Node Forward Connections Routing logic
+                if (nextNode) {
+                    if (node.type === 'if' || node.type === 'while') {
+                        // Find the matching block line branch jumps
+                        let branchIndex = i + 1;
+                        while (branchIndex < nodes.length && nodes[branchIndex].indent > node.indent) {
+                            branchIndex++;
+                        }
+                        
+                        diagramText += `  ${node.id} -- "True" --> ${nextNode.id}\n`;
+                        if (branchIndex < nodes.length) {
+                            diagramText += `  ${node.id} -- "False" --> ${nodes[branchIndex].id}\n`;
+                        } else {
+                            diagramText += `  ${node.id} -- "False" --> End([🏁 End])\n`;
+                        }
+                    } else if (node.type === 'else') {
+                        // Route skip over layout configurations
+                        let exitBranch = i + 1;
+                        while (exitBranch < nodes.length && nodes[exitBranch].indent > node.indent) {
+                            exitBranch++;
+                        }
+                        if (exitBranch < nodes.length) {
+                            diagramText += `  ${node.id} --> ${nodes[exitBranch].id}\n`;
+                        } else {
+                            diagramText += `  ${node.id} --> End([🏁 End])\n`;
+                        }
+                    } else {
+                        // Regular linear statements tracking jumps check up-stack for loops
+                        if (nextNode.indent < node.indent) {
+                            // Find matching parent loop to route back upwards to condition evaluation
+                            let parentLoop = null;
+                            for (let j = i - 1; j >= 0; j--) {
+                                if ((nodes[j].type === 'while') && nodes[j].indent === nextNode.indent) {
+                                    parentLoop = nodes[j];
+                                    break;
+                                }
+                            }
+                            if (parentLoop) {
+                                diagramText += `  ${node.id} --> ${parentLoop.id}\n`;
+                            } else {
+                                diagramText += `  ${node.id} --> ${nextNode.id}\n`;
+                            }
+                        } else {
+                            diagramText += `  ${node.id} --> ${nextNode.id}\n`;
+                        }
+                    }
+                } else {
+                    // Final layout connections matching tail
+                    if (node.indent > 0) {
+                        let outerLoop = null;
+                        for (let j = i - 1; j >= 0; j--) {
+                            if (nodes[j].type === 'while') { outerLoop = nodes[j]; break; }
+                        }
+                        if (outerLoop) {
+                            diagramText += `  ${node.id} --> ${outerLoop.id}\n`;
+                        } else {
+                            diagramText += `  ${node.id} --> End\n`;
+                        }
+                    } else {
+                        diagramText += `  ${node.id} --> End([🏁 End])\n`;
+                    }
+                }
+            }
+
+            // Highlighting style configurations injected safely into runtime rendering engines
+            if (activeNodeId) {
+                diagramText += `  style ${activeNodeId} fill:#f59e0b,stroke:#b45309,stroke-width:4px,color:#fff;\n`;
+            }
+
+            // Re-render payload to UI
+            try {
+                flowchartCanvas.removeAttribute('data-processed');
+                const { svg } = await mermaid.render('parsedGraphSvg', diagramText);
+                flowchartCanvas.innerHTML = svg;
+            } catch (err) {
+                console.error(err);
+                flowchartCanvas.innerHTML = "<span class='text-rose-500 font-medium'>Syntax mapping error logic context bounds broken.</span>";
+            }
+        }
+
+        // Initialize debugging parameters
+        function startDebugging() {
+            parseCodeStructure();
+            if (parsedLines.length === 0) return;
+
+            variables = {};
+            executionPointer = 0;
+            controlStack = [];
+            
+            startDebugBtn.disabled = true;
+            stepBtn.disabled = false;
+            stopDebugBtn.disabled = false;
+            codeEditor.disabled = true;
+
+            updateVariableUI();
+            highlightCurrentLine();
+        }
+
+        function highlightCurrentLine() {
+            if (executionPointer >= 0 && executionPointer < parsedLines.length) {
+                const activeNode = parsedLines[executionPointer];
+                generateVisualFlowchart(activeNode.id);
+            } else {
+                generateVisualFlowchart();
+                stopDebugging();
+            }
+        }
+
+        // Simulates localized JavaScript sandboxed processing evaluation environment for basic Python
+        function evaluatePythonExpression(expr) {
+            // Basic transformation of python conditions to standard JS compliance rules expressions
+            let cleanExpr = expr.replace(/and/g, '&&').replace(/or/g, '||').replace(/not/g, '!');
+            
+            // Create injection context properties scope assignments dynamically safely
+            const contextRunner = new Function(...Object.keys(variables), `return (${cleanExpr});`);
+            try {
+                return contextRunner(...Object.values(variables));
+            } catch (e) {
+                return false; 
+            }
+        }
+
+        function executeNextStep() {
+            if (executionPointer < 0 || executionPointer >= parsedLines.length) {
+                resetDebugger();
+                return;
+            }
+
+            const lineData = parsedLines[executionPointer];
+            let nextPointer = executionPointer + 1;
+
+            switch (lineData.type) {
+                case 'statement':
+                    // Regex assignment interpreter logic checking (e.g. x = y + 1)
+                    if (lineData.text.includes('=')) {
+                        const [varName, rawValue] = lineData.text.split('=').map(s => s.trim());
+                        const trackingValue = evaluatePythonExpression(rawValue);
+                        variables[varName] = trackingValue;
+                    }
+                    
+                    // Scope boundaries check for block nesting exit triggers rules matching
+                    if (nextPointer < parsedLines.length && parsedLines[nextPointer].indent < lineData.indent) {
+                        // Loop routing configurations processing checks back up to condition evaluations
+                        let loopEvaluator = Object.values(controlStack).reverse().find(layer => layer.type === 'while');
+                        if (loopEvaluator && parsedLines[nextPointer].indent <= loopEvaluator.indent) {
+                            nextPointer = loopEvaluator.index;
+                        }
+                    }
+                    break;
+
+                case 'while':
+                    const whilePassed = evaluatePythonExpression(lineData.condition);
+                    // Retain dynamic state tracking blocks contexts entries rules frames tracking structures
+                    if (!controlStack.some(c => c.index === executionPointer)) {
+                        controlStack.push({ type: 'while', indent: lineData.indent, index: executionPointer });
+                    }
+
+                    if (whilePassed) {
+                        nextPointer = executionPointer + 1;
+                    } else {
+                        // Strip local reference parameters frame contexts layers out tracking bounds
+                        controlStack = controlStack.filter(c => c.index !== executionPointer);
+                        nextPointer = findNextBlockExit(executionPointer, lineData.indent);
+                    }
+                    break;
+
+                case 'if':
+                    const ifPassed = evaluatePythonExpression(lineData.condition);
+                    if (ifPassed) {
+                        nextPointer = executionPointer + 1;
+                    } else {
+                        nextPointer = findNextBlockExit(executionPointer, lineData.indent, true);
+                    }
+                    break;
+
+                case 'else':
+                    // If we drop down sequentially into an else evaluation layer implicitly block statements skipped past execution maps entries structures
+                    nextPointer = findNextBlockExit(executionPointer, lineData.indent);
+                    break;
+            }
+
+            executionPointer = nextPointer;
+            updateVariableUI();
+            highlightCurrentLine();
+        }
+
+        function findNextBlockExit(currentIndex, currentIndent, searchForElse = false) {
+            for (let i = currentIndex + 1; i < parsedLines.length; i++) {
+                if (parsedLines[i].indent === currentIndent) {
+                    if (searchForElse && parsedLines[i].type === 'else') {
+                        return i; 
+                    }
+                    if (!searchForElse && parsedLines[i].type !== 'else') {
+                        return i;
+                    }
+                }
+                if (parsedLines[i].indent < currentIndent) {
+                    return i;
+                }
+            }
+            return parsedLines.length; 
+        }
+
+        function updateVariableUI() {
+            if (Object.keys(variables).length === 0) {
+                variableWatch.innerHTML = `<span class="text-slate-500 italic text-xs">No local scopes defined yet.</span>`;
+                return;
+            }
+            let html = '<table class="w-full text-left table-auto border-collapse">';
+            html += '<thead class="text-xs text-slate-500 border-b border-slate-800"><tr><th class="pb-1">Variable</th><th class="pb-1">Value</th><th class="pb-1">Type</th></tr></thead><tbody>';
+            for (const [key, val] of Object.entries(variables)) {
+                let type = typeof val;
+                if (type === 'string') type = 'str';
+                if (type === 'number') type = Number.isInteger(val) ? 'int' : 'float';
+                html += `<tr class="border-b border-slate-800/50"><td class="py-1 text-emerald-400 font-bold">${key}</td><td class="py-1 text-amber-300">${JSON.stringify(val)}</td><td class="py-1 text-slate-400 text-xs">${type}</td></tr>`;
+            }
+            html += '</tbody></table>';
+            variableWatch.innerHTML = html;
+        }
+
+        function resetDebugger() {
+            startDebugBtn.disabled = false;
+            stepBtn.disabled = true;
+            stopDebugBtn.disabled = true;
+            codeEditor.disabled = false;
+            executionPointer = 0;
+            controlStack = [];
+            variableWatch.innerHTML = `<span class="text-slate-500 italic text-xs">No active execution trace. Click "Start Debugging".</span>`;
+            generateVisualFlowchart();
+        }
+
+        // Initial application loading loop trace render run
+        generateVisualFlowchart();
     </script>
 </body>
 </html>
